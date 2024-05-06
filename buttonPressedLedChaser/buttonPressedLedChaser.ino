@@ -62,7 +62,7 @@ if(currentState == HIGH && lastState == LOW)
     state = LOW;
     //ledState = LOW;
   }
-  Serial.println("is getLedState = ");
+  Serial.println("in getLedState = ");
   Serial.print(state);
  }
  return state;
