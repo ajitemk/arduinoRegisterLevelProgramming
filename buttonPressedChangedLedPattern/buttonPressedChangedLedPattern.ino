@@ -241,7 +241,7 @@ if(currentState == HIGH && lastState == LOW)
     case 13:patternValue=PATTERN_7;break;
     case 14:patternValue=PATTERN_9;break;
  
-    default:patternValue=ALL_LED_OFF;count=0;break;
+    default:patternValue=ALL_LED_OFF;count=0;break;//count =0 becoz after completion of all pattern, counter will going to increase
   }
   
  }
