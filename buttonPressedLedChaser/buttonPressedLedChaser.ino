@@ -15,7 +15,8 @@ unsigned char ledpinD[4]={LEDPIN_7,LEDPIN_8,LEDPIN_9,LEDPIN_10};
 // #define PORT_OFF(port,uint8_t pin) port &=(~(pin))
 // #define PORT_TOGGLE(port,uint8_t pin)port ^=(pin)
 
-bool currentState,lastState=LOW,ledState=LOW;
+bool currentState,lastState=LOW,ledState=LOW;  bool state=LOW;
+
 uint8_t count=0;
 void setup() {
   // put your setup code here, to run once:
@@ -48,7 +49,8 @@ void loop() {
 }//end of loop
 bool getLedState()
 {
-  bool state=LOW;
+ //   bool state=LOW; this statement coause led chaser to run one time only
+
 if(currentState == HIGH && lastState == LOW)
  {
   count++;
