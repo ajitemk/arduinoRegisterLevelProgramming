@@ -45,6 +45,7 @@ void loop() {
  {
   //off the chaser
  // ledOff();
+ //allLedOff();
  }
 }//end of loop
 bool getLedState()
@@ -101,8 +102,20 @@ bool isButtonPressed()
     return HIGH;
   }
 }
-void ledOff()
+void allLedOff()
 {
-  PORTB &= (~(LEDPIN_1)) & (~(LEDPIN_2)) & (~(LEDPIN_3)) & (~(LEDPIN_4)) & (~(LEDPIN_5)) & (~(LEDPIN_6));
-  PORTD &= (~(LEDPIN_7)) & (~(LEDPIN_8)) & (~(LEDPIN_9)) & (~(LEDPIN_10)); 
+  for(uint8_t i = 0 ; i < 6;++i)
+  {
+    ledOff(PORTB,ledPinB[i]);
+  }
+    for(uint8_t i = 0 ; i < 4;++i)
+  {
+    ledOff(PORTD,ledPinD[i]);
+  }
+ // PORTB &= (~(LEDPIN_1)) & (~(LEDPIN_2)) & (~(LEDPIN_3)) & (~(LEDPIN_4)) & (~(LEDPIN_5)) & (~(LEDPIN_6));
+  //PORTD &= (~(LEDPIN_7)) & (~(LEDPIN_8)) & (~(LEDPIN_9)) & (~(LEDPIN_10)); 
+}
+void ledOff(volatile uint8_t &port,uint8_t pin)
+{
+  port &= (~(pin));
 }
