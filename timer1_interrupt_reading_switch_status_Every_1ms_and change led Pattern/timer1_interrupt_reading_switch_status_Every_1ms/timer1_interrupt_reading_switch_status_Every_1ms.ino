@@ -8,8 +8,16 @@
  #define LEDPIN_8 (uint8_t)(1<<PD6)
  #define LEDPIN_9 (uint8_t)(1<<PD5)
  #define LEDPIN_10 (uint8_t)(1<<PD4)
- #define SWITCH_2 (uint8_t)(1<<PD2)
- enum patternState{
+#define SWITCH_2 (uint8_t)(1<<PD2)
+
+volatile uint8_t basems_flag;
+volatile unsigned int counter,counter1,counter2,counter3,counter4,counter5,counter_for_reading_switch_PD2_state;
+uint8_t count=0,ledState=0;
+bool currentState,lastState=LOW;  bool state=LOW;
+unsigned char ledpinB[6]={LEDPIN_1,LEDPIN_2,LEDPIN_3,LEDPIN_4,LEDPIN_5,LEDPIN_6};
+unsigned char ledpinD[4]={LEDPIN_7,LEDPIN_8,LEDPIN_9,LEDPIN_10};
+
+enum patternState{
   ALL_LED_OFF,
   PATTERN_A ,
   PATTERN_2 ,
@@ -26,26 +34,22 @@
   PATTERN_7,
   PATTERN_9
  }patternValue;
- unsigned char ledpinB[6]={LEDPIN_1,LEDPIN_2,LEDPIN_3,LEDPIN_4,LEDPIN_5,LEDPIN_6};
-unsigned char ledpinD[4]={LEDPIN_7,LEDPIN_8,LEDPIN_9,LEDPIN_10};
-bool currentState,lastState=LOW;  bool state=LOW;
-uint8_t count=0;
-uint8_t ledState=0;
 void setup() {
   // put your setup code here, to run once:
-DDRB |= (LEDPIN_1) |(LEDPIN_2) |(LEDPIN_3) |(LEDPIN_4) |(LEDPIN_5) |(LEDPIN_6);
+ DDRB |= (LEDPIN_1) |(LEDPIN_2) |(LEDPIN_3) |(LEDPIN_4) |(LEDPIN_5) |(LEDPIN_6);
 DDRD |= (LEDPIN_7) |(LEDPIN_8) |(LEDPIN_9) |(LEDPIN_10);
 DDRD &= ~(SWITCH_2); // set port pin as input
-
+  timer1_init();
+  Serial.begin(9600);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-   currentState =  isButtonPressed() ;
-   _delay_ms(85);
- ledState = getLedState();
- lastState = currentState;
- switch(ledState)
+ basems_wait_for_1ms();
+ userDefinedTask_for_Timer1();
+  ledState = getLedState();
+   lastState = currentState;
+switch(ledState)
  {
   case PATTERN_A:pattern_A();break;
   case PATTERN_2:pattern_2();break;
@@ -64,20 +68,60 @@ void loop() {
   
   default:allLedOff();break;
  }
-//   _delay_ms(1000);pattern_A();
-//   _delay_ms(1000);pattern_2();
-//  _delay_ms(1000); pattern_3();
-//  _delay_ms(1000);pattern_c();
-//  _delay_ms(1000);pattern_e();
-//  _delay_ms(1000);pattern_f();
-//  _delay_ms(1000); pattern_g();
-//  _delay_ms(1000);pattern_k();
-//  _delay_ms(1000);pattern_p();
-//  _delay_ms(1000);pattern_s();
-//  _delay_ms(1000);pattern_4();
-//  _delay_ms(1000);pattern_6();
-//  _delay_ms(1000);pattern_7();
-//  _delay_ms(1000);pattern_9();
+
+ Serial.print("currentState = ");
+ Serial.println(currentState);
+}
+/***************TIME INIT***********************************************/
+void timer1_init(void)
+{
+  
+  sei(); // enable global interrupt
+  TIMSK1 |= (1<<TOIE1);  // timer1 overflow interrupt enable,menas notify to cpu about overflow of time
+  TCCR1B |=(1<<CS12)|(1<<CS10); // 1024 prescale value
+  TCCR1B &= (~(1<<CS11));// prescalar to decrease cpu frequency
+  TCCR1A=0x00;           //no wave generation mode
+  TCNT1 = 65520;		  //loading the step count from where it has to start to reach max value(65535)
+}
+ISR(TIMER1_OVF_vect)
+{
+  noInterrupts();
+  basems_flag=1;
+  //counter=counter+1;   // no need for arithmetic operation
+  TCNT1=65520;// due to prescaler value may be differ
+        //Serial.println("IN ISR====================================================");
+
+  interrupts();
+}
+/*****************************TIMER 1 BASE TIME of 1ms *********************/
+void basems_wait_for_1ms()
+{
+
+  //this function has an 1ms execution time
+  basems_flag=0;
+  counter++;
+  counter1++;
+  counter2++;
+  counter3++;
+  counter4++;
+  counter5++;  
+  counter_for_reading_switch_PD2_state++;
+  while(basems_flag == 0);
+
+}
+/***************************USER DEFINE TASK ********************************/
+void userDefinedTask_for_Timer1()
+{
+     // Serial.println(counter);
+  //Serial.println(counter);
+  if(counter_for_reading_switch_PD2_state == 10)
+  {
+     currentState=isButtonPressed();
+      _delay_ms(85);
+     //Serial.println("+++++++++++++++0");
+     counter_for_reading_switch_PD2_state=0;
+  }
+
 }
 /**********************************PATTERN STARTED******************************/
 void pattern_A()
@@ -204,6 +248,7 @@ void allLedOff()
   //PORTD &= (~(LEDPIN_7)) & (~(LEDPIN_8)) & (~(LEDPIN_9)) & (~(LEDPIN_10)); 
 }
 /***********************************PATTERNENDED***************************************/
+
 /********************************SWITCH CODE STARTED ***********************************/
 
 bool isButtonPressed()
@@ -221,7 +266,7 @@ uint8_t getLedState()
 {
  //   bool state=LOW; this statement coause led chaser to run one time only
 
-if(currentState == HIGH && lastState == LOW)
+if(currentState == HIGH && lastState == LOW) // lastState is important
  {
   count++;
   /*****below line of code give status of state*****/
